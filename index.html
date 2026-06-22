@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mykasir - Aplikasi POS Modern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Kustomisasi scrollbar halus untuk area keranjang dan tabel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f97316;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ea580c;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 h-screen overflow-hidden">
+
+    <div id="login-container" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-950 via-orange-900 to-amber-700 px-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md transform transition duration-300 hover:scale-[1.01]">
+            <div class="flex flex-col items-center mb-8">
+                <div class="bg-orange-500 p-4 rounded-2xl text-white shadow-lg mb-3">
+                    <i class="fa-solid fa-cash-register text-3xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold tracking-tight text-gray-800">my<span class="text-orange-600">kasir</span></h1>
+                <p class="text-gray-400 text-xs mt-1 font-medium">Silakan masuk untuk mengakses sistem POS</p>
+            </div>
+
+            <div id="login-error" class="hidden bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl p-3.5 mb-4 font-medium flex items-center gap-2">
+                <i class="fa-solid fa-circle-exclamation text-sm"></i> Username atau password salah!
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                            <i class="fa-solid fa-user text-sm"></i>
+                        </span>
+                        <input type="text" id="login-username" required placeholder="Masukkan username" class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                            <i class="fa-solid fa-lock text-sm"></i>
+                        </span>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-orange-600/20 transition duration-200 mt-2 cursor-pointer text-sm flex items-center justify-center gap-2">
+                    Masuk <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="main-app-container" class="hidden flex h-screen overflow-hidden">
+        
+        <aside class="w-64 bg-orange-950 text-white flex flex-col justify-between shadow-xl z-10">
+            <div class="p-6">
+                <div class="flex items-center gap-3 px-2 mb-8">
+                    <div class="bg-orange-500 p-2 rounded-lg text-white shadow-md">
+                        <i class="fa-solid fa-cash-register text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">my<span class="text-orange-400">kasir</span></h1>
+                </div>
+                
+                <nav class="space-y-1">
+                    <button onclick="switchPage('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-800 text-white font-medium transition duration-200 cursor-pointer text-left">
+                        <i class="fa-solid fa-chart-pie w-5 text-center"></i> Dashboard
+                    </button>
+                    <button onclick="switchPage('kasir')" id="nav-kasir" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-orange-100 hover:bg-orange-900/60 hover:text-white font-medium transition duration-200 cursor-pointer text-left">
+                        <i class="fa-solid fa-cart-shopping w-5 text-center"></i> Kasir Transaksi
+                    </button>
+                    <button onclick="switchPage('stok')" id="nav-stok" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-orange-100 hover:bg-orange-900/60 hover:text-white font-medium transition duration-200 cursor-pointer text-left">
+                        <i class="fa-solid fa-boxes-stacked w-5 text-center"></i> Manajemen Stok
+                    </button>
+                    <button onclick="switchPage('laporan')" id="nav-laporan" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-orange-100 hover:bg-orange-900/60 hover:text-white font-medium transition duration-200 cursor-pointer text-left">
+                        <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> Laporan Penjualan
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t border-orange-900/60 space-y-3">
+                <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-300 hover:bg-red-950/40 hover:text-red-400 text-sm font-semibold transition duration-200 cursor-pointer text-left">
+                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Keluar (Logout)
+                </button>
+                <div class="px-4 text-[10px] text-orange-400 font-medium">
+                    <p><i class="fa-regular fa-clock mr-1"></i> Versi Sistem 1.2.0</p>
+                </div>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            
+            <header class="bg-white border-b border-gray-100 px-8 py-5 flex items-center justify-between shadow-sm">
+                <h2 id="page-title" class="text-xl font-bold text-gray-800 tracking-tight">Dashboard Utama</h2>
+                <div class="flex items-center gap-3 bg-orange-50 px-4 py-2 rounded-full border border-orange-100">
+                    <span class="w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse"></span>
+                    <span id="user-display" class="text-xs font-semibold text-orange-800 tracking-wide uppercase">Kasir: Aktif</span>
+                </div>
+            </header>
+
+            <main class="flex-1 p-8 overflow-y-auto">
+                
+                <section id="page-dashboard" class="page-section">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition hover:shadow-md">
+                            <div>
+                                <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Omset Hari Ini</p>
+                                <h3 id="dash-omset" class="text-3xl font-extrabold text-gray-800 mt-1">Rp 0</h3>
+                            </div>
+                            <div class="p-4 bg-orange-50 text-orange-600 rounded-xl">
+                                <i class="fa-solid fa-money-bill-wave text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition hover:shadow-md">
+                            <div>
+                                <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Transaksi</p>
+                                <h3 id="dash-transaksi" class="text-3xl font-extrabold text-gray-800 mt-1">0</h3>
+                            </div>
+                            <div class="p-4 bg-blue-50 text-blue-600 rounded-xl">
+                                <i class="fa-solid fa-receipt text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition hover:shadow-md">
+                            <div>
+                                <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Jenis Produk</p>
+                                <h3 id="dash-produk" class="text-3xl font-extrabold text-gray-800 mt-1">3</h3>
+                            </div>
+                            <div class="p-4 bg-purple-50 text-purple-600 rounded-xl">
+                                <i class="fa-solid fa-box text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-orange-600 to-amber-500 text-white p-8 rounded-2xl shadow-sm relative overflow-hidden">
+                        <div class="relative z-10 max-w-xl">
+                            <h3 class="text-2xl font-bold mb-2">Selamat Datang di mykasir!</h3>
+                            <p class="text-orange-100 text-sm leading-relaxed">Pantau aktivitas penjualan dan inventori produk toko Anda secara real-time. Pilih menu navigasi di sebelah kiri untuk mengoperasikan sistem kasir atau menambahkan persediaan barang baru.</p>
+                        </div>
+                        <i class="fa-solid fa-store text-9xl absolute -right-4 -bottom-4 text-orange-500/20 transform rotate-12"></i>
+                    </div>
+                </section>
+
+                <section id="page-kasir" class="page-section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                        <div class="lg:col-span-2">
+                            <h3 class="text-base font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-boxes-stacked text-orange-600"></i> Etalase Produk Belanja
+                            </h3>
+                            <div id="kasir-products-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between h-[calc(100vh-210px)] sticky top-0">
+                            <div class="overflow-hidden flex flex-col flex-1">
+                                <h3 class="text-base font-bold text-gray-700 border-b border-gray-100 pb-3 mb-4 flex items-center justify-between">
+                                    <span class="flex items-center gap-2"><i class="fa-solid fa-basket-shopping text-orange-600"></i> Keranjang</span>
+                                    <span id="cart-count" class="bg-orange-100 text-orange-800 text-xs px-2.5 py-1 rounded-full font-bold">0 Barang</span>
+                                </h3>
+                                <div id="cart-items-container" class="space-y-3 overflow-y-auto flex-1 pr-1"></div>
+                            </div>
+
+                            <div class="border-t border-gray-100 pt-4 mt-4 bg-white">
+                                <div class="flex justify-between items-center mb-4">
+                                    <span class="text-sm text-gray-400 font-bold uppercase tracking-wider">Total Bayar</span>
+                                    <span id="cart-total" class="text-2xl font-extrabold text-orange-600">Rp 0</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button onclick="clearCart()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold py-3 rounded-xl transition duration-200 cursor-pointer text-sm flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-trash-can"></i> BATAL
+                                    </button>
+                                    <button onclick="checkout()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-xl shadow-md shadow-orange-600/10 transition duration-200 cursor-pointer text-sm flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-hand-holding-dollar"></i> BAYAR
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-stok" class="page-section hidden">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+                        <h3 class="text-base font-bold text-gray-700 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-plus text-orange-600"></i> Restock / Tambah Komoditas Produk Baru
+                        </h3>
+                        <form id="form-tambah-produk" onsubmit="addProduct(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nama Produk</label>
+                                <input type="text" id="input-nama" required placeholder="Contoh: Telur Ayam 1kg" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Kode SKU</label>
+                                <input type="text" id="input-sku" required placeholder="Contoh: BRG004" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Harga Jual (Rp)</label>
+                                <input type="number" id="input-harga" required min="1" placeholder="0" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Jumlah Stok</label>
+                                <input type="number" id="input-stok" required min="1" placeholder="0" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition">
+                            </div>
+                            <div class="md:col-span-4 flex justify-end mt-2">
+                                <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm shadow-md shadow-orange-600/10 transition duration-200 cursor-pointer flex items-center gap-2">
+                                    <i class="fa-solid fa-plus"></i> Simpan ke Inventori
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-5 border-b border-gray-50">
+                            <h3 class="text-base font-bold text-gray-700">Tabel Monitoring Persediaan Barang</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b border-gray-100 text-gray-400 text-xs font-bold uppercase tracking-wider">
+                                        <th class="p-4 pl-6">SKU</th>
+                                        <th class="p-4">Nama Produk</th>
+                                        <th class="p-4">Harga Satuan</th>
+                                        <th class="p-4 pr-6 text-right">Sisa Stok Gudang</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stok-table-body" class="divide-y divide-gray-50 text-sm text-gray-600"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-laporan" class="page-section hidden">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8 flex items-center justify-between transition hover:shadow-md">
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Pendapatan Keseluruhan</p>
+                            <h3 id="laporan-total-pendapatan" class="text-3xl font-extrabold text-orange-600 mt-1">Rp 0</h3>
+                        </div>
+                        <div class="p-4 bg-orange-50 text-orange-600 rounded-xl">
+                            <i class="fa-solid fa-chart-line text-2xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-5 border-b border-gray-50">
+                            <h3 class="text-base font-bold text-gray-700">Audit Riwayat Transaksi Masuk</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b border-gray-100 text-gray-400 text-xs font-bold uppercase tracking-wider">
+                                        <th class="p-4 pl-6">ID Transaksi</th>
+                                        <th class="p-4">Waktu & Tanggal Masuk</th>
+                                        <th class="p-4 pr-6 text-right">Total Nominal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="laporan-table-body" class="divide-y divide-gray-50 text-sm text-gray-600"></tbody>
+                            </table>
+                            <div id="laporan-empty" class="p-12 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
+                                <i class="fa-solid fa-folder-open text-4xl text-gray-300"></i>
+                                <p class="text-sm">Belum ada riwayat transaksi yang tersimpan saat ini.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // DATA AWAL PRODUK
+        let products = [
+            { sku: 'BRG001', name: 'Beras 5kg', price: 65000, stock: 20 },
+            { sku: 'BRG002', name: 'Minyak Goreng 2L', price: 35000, stock: 15 },
+            { sku: 'BRG003', name: 'Gula Pasir 1kg', price: 14500, stock: 50 }
+        ];
+        
+        let cart = [];
+        let transactions = [];
+        let totalOmset = 0;
+
+        // FORMAT RUPIAH
+        function formatRupiah(num) {
+            return 'Rp ' + num.toLocaleString('id-ID');
+        }
+
+        // ================= LOGIKA LOGIN & LOGOUT =================
+        function handleLogin(event) {
+            event.preventDefault();
+            const userInp = document.getElementById('login-username').value.trim();
+            const passInp = document.getElementById('login-password').value.trim();
+            const errorDiv = document.getElementById('login-error');
+
+            // Validasi Kredensial (Username: kasir, Password:  12345)
+            if (userInp === 'fhatir' && passInp === '12345') {
+                errorDiv.classList.add('hidden');
+                
+                // Sembunyikan form login, tampilkan aplikasi POS
+                document.getElementById('login-container').classList.add('hidden');
+                document.getElementById('main-app-container').classList.remove('hidden');
+                
+                // Set nama kasir di topbar
+                document.getElementById('user-display').innerText = `Kasir: ${userInp}`;
+                
+                // Ambil data dashboard pertama kali
+                switchPage('dashboard');
+                
+                // Reset form login
+                document.getElementById('login-username').value = '';
+                document.getElementById('login-password').value = '';
+            } else {
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // Logout
+        function handleLogout() {
+            if(confirm('Apakah Anda yakin ingin keluar dari sistem mykasir?')) {
+                document.getElementById('main-app-container').classList.add('hidden');
+                document.getElementById('login-container').classList.remove('hidden');
+                cart = [];
+            }
+        }
+
+        // ================= SISTEM NAVIGASI (SPA) =================
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(`page-${pageId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('bg-orange-800', 'text-white');
+                item.classList.add('text-orange-100', 'hover:bg-orange-900/60', 'hover:text-white');
+            });
+            const currentNav = document.getElementById(`nav-${pageId}`);
+            currentNav.classList.remove('text-orange-100', 'hover:bg-orange-900/60', 'hover:text-white');
+            currentNav.classList.add('bg-orange-800', 'text-white');
+
+            const titles = {
+                'dashboard': 'Dashboard Utama',
+                'kasir': 'Kasir & Manajemen Transaksi',
+                'stok': 'Manajemen Stok Gudang',
+                'laporan': 'Laporan Analisis Penjualan'
+            };
+            document.getElementById('page-title').innerText = titles[pageId];
+
+            if (pageId === 'dashboard') renderDashboard();
+            if (pageId === 'kasir') { renderKasir(); renderCart(); }
+            if (pageId === 'stok') renderStok();
+            if (pageId === 'laporan') renderLaporan();
+        }
+
+        // ================= RENDER LOGIC =================
+        function renderDashboard() {
+            document.getElementById('dash-omset').innerText = formatRupiah(totalOmset);
+            document.getElementById('dash-transaksi').innerText = transactions.length;
+            document.getElementById('dash-produk').innerText = products.length;
+        }
+
+        function renderKasir() {
+            const grid = document.getElementById('kasir-products-grid');
+            grid.innerHTML = '';
+
+            products.forEach(product => {
+                const inCart = cart.find(item => item.sku === product.sku);
+                const currentCartQty = inCart ? inCart.qty : 0;
+                const availableStock = product.stock - currentCartQty;
+                const isOutOfStock = availableStock <= 0;
+
+                const card = document.createElement('div');
+                card.className = `bg-white p-5 rounded-2xl border border-gray-100 flex flex-col justify-between transition hover:shadow-md duration-200`;
+                card.innerHTML = `
+                    <div>
+                        <span class="text-[10px] bg-gray-100 text-gray-500 font-bold px-2 py-0.5 rounded uppercase font-mono">${product.sku}</span>
+                        <h4 class="font-bold text-gray-800 text-base mt-2.5 truncate">${product.name}</h4>
+                        <p class="text-orange-600 font-extrabold mt-1 text-base">${formatRupiah(product.price)}</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
+                        <span class="text-xs text-gray-400 font-medium">Stok: <strong class="${availableStock <= 5 ? 'text-red-500 animate-pulse' : 'text-gray-700'}">${availableStock} pcs</strong></span>
+                        <button onclick="addToCart('${product.sku}')" ${isOutOfStock ? 'disabled' : ''} 
+                            class="px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition duration-200 cursor-pointer flex items-center gap-1 ${isOutOfStock ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 text-white'}">
+                            <i class="fa-solid fa-plus text-[10px]"></i> Tambah
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items-container');
+            container.innerHTML = '';
+            
+            let totalPay = 0;
+            let totalItemsCount = 0;
+
+            cart.forEach(item => {
+                const itemSubtotal = item.price * item.qty;
+                totalPay += itemSubtotal;
+                totalItemsCount += item.qty;
+
+                const element = document.createElement('div');
+                element.className = "flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100";
+                element.innerHTML = `
+                    <div class="flex-1 min-w-0 pr-2">
+                        <p class="text-xs font-bold text-gray-800 truncate">${item.name}</p>
+                        <p class="text-[11px] text-gray-400 font-medium">${formatRupiah(item.price)} x ${item.qty}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-extrabold text-gray-700">${formatRupiah(itemSubtotal)}</span>
+                        <div class="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden">
+                            <button onclick="changeCartQty('${item.sku}', -1)" class="w-5 h-5 bg-gray-50 hover:bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold transition cursor-pointer">-</button>
+                            <span class="px-1.5 text-xs font-bold text-gray-700">${item.qty}</span>
+                            <button onclick="changeCartQty('${item.sku}', 1)" class="w-5 h-5 bg-gray-50 hover:bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold transition cursor-pointer">+</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(element);
+            });
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 text-gray-400 text-xs flex flex-col items-center gap-2">
+                        <i class="fa-solid fa-basket-shopping text-3xl text-gray-200"></i>
+                        <p>Belum ada produk dipilih.</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('cart-count').innerText = `${totalItemsCount} Barang`;
+            document.getElementById('cart-total').innerText = formatRupiah(totalPay);
+        }
+
+        function addToCart(sku) {
+            const product = products.find(p => p.sku === sku);
+            if (!product) return;
+
+            const inCart = cart.find(item => item.sku === sku);
+            const currentQty = inCart ? inCart.qty : 0;
+
+            if (currentQty < product.stock) {
+                if (inCart) {
+                    inCart.qty += 1;
+                } else {
+                    cart.push({ sku: product.sku, name: product.name, price: product.price, qty: 1 });
+                }
+                renderKasir();
+                renderCart();
+            } else {
+                alert('Peringatan: Jumlah pesanan melampaui sisa stok gudang!');
+            }
+        }
+
+        function changeCartQty(sku, amount) {
+            const inCart = cart.find(item => item.sku === sku);
+            const product = products.find(p => p.sku === sku);
+            if (!inCart || !product) return;
+
+            const futureQty = inCart.qty + amount;
+            if (futureQty <= 0) {
+                cart = cart.filter(item => item.sku !== sku);
+            } else if (futureQty <= product.stock) {
+                inCart.qty = futureQty;
+            } else {
+                alert('Peringatan: Stok produk tidak mencukupi untuk ditambah lagi!');
+                return;
+            }
+            renderKasir();
+            renderCart();
+        }
+
+        function clearCart() {
+            if(cart.length === 0) return;
+            if(confirm('Apakah Anda yakin ingin mengosongkan isi keranjang belanja?')) {
+                cart = [];
+                renderKasir();
+                renderCart();
+            }
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert('Proses gagal: Keranjang masih kosong!');
+                return;
+            }
+
+            let calculatedTotal = 0;
+
+            cart.forEach(cartItem => {
+                const targetProduct = products.find(p => p.sku === cartItem.sku);
+                if (targetProduct) {
+                    targetProduct.stock -= cartItem.qty;
+                    calculatedTotal += cartItem.price * cartItem.qty;
+                }
+            });
+
+            const trxId = `TRX-${String(transactions.length + 1).padStart(3, '0')}`;
+            const now = new Date();
+            const formattedDateTime = now.toLocaleDateString('id-ID') + ' ' + now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+
+            transactions.push({ id: trxId, date: formattedDateTime, total: calculatedTotal });
+            totalOmset += calculatedTotal;
+            cart = [];
+
+            alert('Transaksi Berhasil!');
+            renderKasir();
+            renderCart();
+        }
+
+        function renderStok() {
+            const tbody = document.getElementById('stok-table-body');
+            tbody.innerHTML = '';
+
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-50/80 transition border-b border-gray-50";
+                row.innerHTML = `
+                    <td class="p-4 pl-6 font-mono text-xs font-semibold text-gray-400">${product.sku}</td>
+                    <td class="p-4 font-bold text-gray-800">${product.name}</td>
+                    <td class="p-4 font-medium">${formatRupiah(product.price)}</td>
+                    <td class="p-4 pr-6 text-right font-extrabold ${product.stock <= 5 ? 'text-red-500' : 'text-gray-700'}">${product.stock} pcs</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function addProduct(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('input-nama').value.trim();
+            const sku = document.getElementById('input-sku').value.trim().toUpperCase();
+            const price = parseInt(document.getElementById('input-harga').value);
+            const stock = parseInt(document.getElementById('input-stok').value);
+
+            if (products.some(p => p.sku === sku)) {
+                alert('Error: Kode SKU barang sudah terdaftar di sistem!');
+                return;
+            }
+
+            products.push({ sku, name, price, stock });
+            document.getElementById('form-tambah-produk').reset();
+            renderStok();
+            alert('Produk baru berhasil didaftarkan ke sistem mykasir!');
+        }
+
+        function renderLaporan() {
+            document.getElementById('laporan-total-pendapatan').innerText = formatRupiah(totalOmset);
+
+            const tbody = document.getElementById('laporan-table-body');
+            const emptyNotice = document.getElementById('laporan-empty');
+            tbody.innerHTML = '';
+
+            if (transactions.length === 0) {
+                emptyNotice.classList.remove('hidden');
+            } else {
+                emptyNotice.classList.add('hidden');
+                
+                [...transactions].reverse().forEach(trx => {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-gray-50/80 transition border-b border-gray-50";
+                    row.innerHTML = `
+                        <td class="p-4 pl-6 font-mono text-xs font-extrabold text-orange-700">${trx.id}</td>
+                        <td class="p-4 text-gray-400 font-medium text-xs">${trx.date}</td>
+                        <td class="p-4 pr-6 text-right font-extrabold text-gray-800">${formatRupiah(trx.total)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
